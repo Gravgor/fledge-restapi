@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type HotelHandler struct {
@@ -85,12 +86,16 @@ func (h *HotelHandler) GetHotel(c *gin.Context) {
 // @Security Bearer
 // @Router /api/hotels/{id}/book [post]
 func (h *HotelHandler) BookHotel(c *gin.Context) {
-	userID, exists := c.Get("userID")
+	userIDStr, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
 		return
 	}
-
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	var req entity.BookingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -107,7 +112,7 @@ func (h *HotelHandler) BookHotel(c *gin.Context) {
 	*req.HotelID = uint(hotelID)
 	req.BookingType = "hotel"
 
-	booking, err := h.hotelService.BookHotel(c.Request.Context(), userID.(uint), &req)
+	booking, err := h.hotelService.BookHotel(c.Request.Context(), userID, &req)
 	if err != nil {
 		switch err {
 		case errors.ErrNoRoomsAvailable:

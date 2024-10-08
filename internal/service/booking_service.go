@@ -7,6 +7,8 @@ import (
 
 	"fledge-restapi/internal/domain/entity"
 	"fledge-restapi/internal/domain/repository"
+
+	"github.com/google/uuid"
 )
 
 type BookingService struct {
@@ -19,11 +21,11 @@ func NewBookingService(bookingRepo repository.BookingRepository) *BookingService
 	}
 }
 
-func (s *BookingService) ListBookings(ctx context.Context, userID uint) ([]entity.Booking, error) {
+func (s *BookingService) ListBookings(ctx context.Context, userID uuid.UUID) ([]entity.Booking, error) {
 	return s.bookingRepo.FindByUserID(ctx, userID)
 }
 
-func (s *BookingService) GetBooking(ctx context.Context, id uint, userID uint) (*entity.Booking, error) {
+func (s *BookingService) GetBooking(ctx context.Context, id uint, userID uuid.UUID) (*entity.Booking, error) {
 	booking, err := s.bookingRepo.FindByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -36,7 +38,7 @@ func (s *BookingService) GetBooking(ctx context.Context, id uint, userID uint) (
 	return booking, nil
 }
 
-func (s *BookingService) UpdateBooking(ctx context.Context, id uint, userID uint, updates map[string]interface{}) error {
+func (s *BookingService) UpdateBooking(ctx context.Context, id uint, userID uuid.UUID, updates map[string]interface{}) error {
 	booking, err := s.GetBooking(ctx, id, userID)
 	if err != nil {
 		return err
@@ -50,7 +52,7 @@ func (s *BookingService) UpdateBooking(ctx context.Context, id uint, userID uint
 	return s.bookingRepo.Update(ctx, id, updates)
 }
 
-func (s *BookingService) CancelBooking(ctx context.Context, id uint, userID uint) error {
+func (s *BookingService) CancelBooking(ctx context.Context, id uint, userID uuid.UUID) error {
 	booking, err := s.GetBooking(ctx, id, userID)
 	if err != nil {
 		return err

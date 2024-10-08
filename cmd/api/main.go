@@ -49,12 +49,15 @@ func main() {
 	r.POST("/auth/login", userHandler.Login)
 	//r.POST("/auth/refresh", userHandler.RefreshToken)
 
+	r.POST("/api/flights/search", flightHandler.SearchFlights)
+	r.GET("/api/flights/get-all", flightHandler.ListAllFlights)
+	r.GET("/api/flights/search/origin", flightHandler.ListFlightsByOrigin)
 	// API routes
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
 	{
 		// Flight routes
-		api.GET("/flights/search", flightHandler.SearchFlights)
+
 		api.GET("/flights/:id", flightHandler.GetFlight)
 		api.POST("/flights/:id/book", flightHandler.BookFlight)
 
@@ -71,9 +74,9 @@ func main() {
 
 		// Profile routes
 		api.GET("/profile", userHandler.GetProfile)
-		api.PUT("/profile", userHandler.UpdateProfile)
+		/*api.PUT("/profile", userHandler.UpdateProfile)
 		api.GET("/profile/preferences", userHandler.GetPreferences)
-		api.PUT("/profile/preferences", userHandler.UpdatePreferences)
+		api.PUT("/profile/preferences", userHandler.UpdatePreferences)*/
 	}
 
 	// Start server

@@ -5,6 +5,7 @@ import (
 	"fledge-restapi/internal/domain/entity"
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -46,6 +47,8 @@ func (r *baseRepository[T]) FindByID(ctx context.Context, id uint) (*T, error) {
 type FlightRepository interface {
 	Repository[entity.Flight]
 	Search(ctx context.Context, params FlightSearchParams) ([]entity.Flight, error)
+	FindAll(ctx context.Context) ([]entity.Flight, error)
+	FindByOrigin(ctx context.Context, origin string) ([]entity.Flight, error)
 }
 
 type FlightSearchParams struct {
@@ -75,6 +78,24 @@ func (r *flightRepository) Search(ctx context.Context, params FlightSearchParams
 		Where("class = ?", params.Class)
 
 	if err := query.Find(&flights).Error; err != nil {
+		return nil, err
+	}
+	return flights, nil
+}
+
+func (r *flightRepository) FindAll(ctx context.Context) ([]entity.Flight, error) {
+	var flights []entity.Flight
+	if err := r.db.WithContext(ctx).Find(&flights).Error; err != nil {
+		return nil, err
+	}
+	return flights, nil
+}
+
+func (r *flightRepository) FindByOrigin(ctx context.Context, origin string) ([]entity.Flight, error) {
+	var flights []entity.Flight
+	if err := r.db.WithContext(ctx).
+		Where("departure_city = ?", origin).
+		Find(&flights).Error; err != nil {
 		return nil, err
 	}
 	return flights, nil
@@ -126,7 +147,7 @@ func (r *hotelRepository) Search(ctx context.Context, params HotelSearchParams) 
 // Booking Repository
 type BookingRepository interface {
 	FindByID(ctx context.Context, id uint) (*entity.Booking, error)
-	FindByUserID(ctx context.Context, userID uint) ([]entity.Booking, error)
+	FindByUserID(ctx context.Context, userID uuid.UUID) ([]entity.Booking, error)
 	Create(ctx context.Context, booking *entity.Booking) error
 	Update(ctx context.Context, id uint, updates map[string]interface{}) error
 }
@@ -147,7 +168,7 @@ func (r *bookingRepository) FindByID(ctx context.Context, id uint) (*entity.Book
 	return &booking, nil
 }
 
-func (r *bookingRepository) FindByUserID(ctx context.Context, userID uint) ([]entity.Booking, error) {
+func (r *bookingRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]entity.Booking, error) {
 	var bookings []entity.Booking
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).Find(&bookings).Error; err != nil {
 		return nil, err

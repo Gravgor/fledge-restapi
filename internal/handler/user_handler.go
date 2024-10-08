@@ -69,7 +69,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// New methods below
+/*New methods below
 
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	userID, _ := c.Get("userID")
@@ -130,3 +130,4 @@ func (h *UserHandler) UpdatePreferences(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Preferences updated successfully"})
 }
+*/

@@ -6,12 +6,16 @@ import (
 	"fledge-restapi/internal/domain/repository"
 	"fledge-restapi/pkg/errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type FlightService interface {
 	SearchFlights(ctx context.Context, req *entity.FlightSearchRequest) ([]entity.Flight, error)
 	GetFlightByID(ctx context.Context, id uint) (*entity.Flight, error)
-	BookFlight(ctx context.Context, userID uint, bookingReq *entity.BookingRequest) (*entity.Booking, error)
+	BookFlight(ctx context.Context, userID uuid.UUID, bookingReq *entity.BookingRequest) (*entity.Booking, error)
+	ListAllFlights(ctx context.Context) ([]entity.Flight, error)
+	ListFlightsByOrigin(ctx context.Context, origin string) ([]entity.Flight, error)
 }
 
 type flightService struct {
@@ -56,7 +60,21 @@ func (s *flightService) GetFlightByID(ctx context.Context, id uint) (*entity.Fli
 	return s.flightRepo.FindByID(ctx, id)
 }
 
-func (s *flightService) BookFlight(ctx context.Context, userID uint, bookingReq *entity.BookingRequest) (*entity.Booking, error) {
+func (s *flightService) ListAllFlights(ctx context.Context) ([]entity.Flight, error) {
+	return s.flightRepo.FindAll(ctx)
+}
+
+func (s *flightService) ListFlightsByOrigin(ctx context.Context, origin string) ([]entity.Flight, error) {
+	// Get all flights filtered by origin
+	flights, err := s.flightRepo.FindByOrigin(ctx, origin)
+	if err != nil {
+		return nil, err
+	}
+
+	return flights, nil
+}
+
+func (s *flightService) BookFlight(ctx context.Context, userID uuid.UUID, bookingReq *entity.BookingRequest) (*entity.Booking, error) {
 	// Validate flight exists and has availability
 	flight, err := s.flightRepo.FindByID(ctx, *bookingReq.FlightID)
 	if err != nil {

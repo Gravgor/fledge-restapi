@@ -3,12 +3,14 @@ package entity
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // User represents the application user
 type User struct {
 	gorm.Model
+	ID          uuid.UUID       `json:"id" gorm:"type:uuid;"` // Set ID to be a UUID
 	Email       string          `json:"email" gorm:"unique;not null"`
 	Password    string          `json:"-" gorm:"not null"`
 	FirstName   string          `json:"first_name"`
@@ -24,8 +26,8 @@ type RefreshTokenRequest struct {
 }
 
 type SignupRequest struct {
-	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required,min=6"`
+	FirstName string `json:"first_name" binding:"required"`
+	LastName  string `json:"last_name" binding:"required,min=6"`
 	Email     string `json:"email" binding:"required,email"`
 	Password  string `json:"password" binding:"required,min=6"`
 }
@@ -38,26 +40,27 @@ type LoginRequest struct {
 // UserPreferences stores user's travel preferences
 type UserPreferences struct {
 	gorm.Model
-	UserID            uint   `json:"user_id"`
-	PreferredSeat     string `json:"preferred_seat"` // window, aisle
-	MealPreference    string `json:"meal_preference"`
-	PreferredAirlines string `json:"preferred_airlines"`
-	PreferredHotels   string `json:"preferred_hotels"`
+	UserID            uuid.UUID `json:"user_id"`
+	PreferredSeat     string    `json:"preferred_seat"` // window, aisle
+	MealPreference    string    `json:"meal_preference"`
+	PreferredAirlines string    `json:"preferred_airlines"`
+	PreferredHotels   string    `json:"preferred_hotels"`
 }
 
 // Flight represents a flight offering
 type Flight struct {
 	gorm.Model
-	FlightNumber   string    `json:"flight_number"`
-	Airline        string    `json:"airline"`
-	DepartureCity  string    `json:"departure_city"`
-	ArrivalCity    string    `json:"arrival_city"`
-	DepartureTime  time.Time `json:"departure_time"`
-	ArrivalTime    time.Time `json:"arrival_time"`
-	AvailableSeats int       `json:"available_seats"`
-	Price          float64   `json:"price"`
-	Class          string    `json:"class"` // economy, business, first
-	Status         string    `json:"status"`
+	FlightNumber       string    `json:"flight_number"`
+	Airline            string    `json:"airline"`
+	DepartureCity      string    `json:"departure_city"`
+	ArrivalCity        string    `json:"arrival_city"`
+	DestinationCountry string    `json:"destination_country"`
+	DepartureTime      time.Time `json:"departure_time"`
+	ArrivalTime        time.Time `json:"arrival_time"`
+	AvailableSeats     int       `json:"available_seats"`
+	Price              float64   `json:"price"`
+	Class              string    `json:"class"` // economy, business, first
+	Status             string    `json:"status"`
 }
 
 // Hotel represents a hotel offering
@@ -99,7 +102,7 @@ type VacationPackage struct {
 // Booking represents a user booking
 type Booking struct {
 	gorm.Model
-	UserID            uint      `json:"user_id"`
+	UserID            uuid.UUID `json:"user_id"`
 	BookingType       string    `json:"booking_type"` // flight, hotel, package
 	FlightID          *uint     `json:"flight_id,omitempty"`
 	HotelID           *uint     `json:"hotel_id,omitempty"`

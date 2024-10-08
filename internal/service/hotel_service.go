@@ -6,12 +6,14 @@ import (
 	"fledge-restapi/internal/domain/repository"
 	"fledge-restapi/pkg/errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type HotelService interface {
 	SearchHotels(ctx context.Context, req *entity.HotelSearchRequest) ([]entity.Hotel, error)
 	GetHotelByID(ctx context.Context, id uint) (*entity.Hotel, error)
-	BookHotel(ctx context.Context, userID uint, bookingReq *entity.BookingRequest) (*entity.Booking, error)
+	BookHotel(ctx context.Context, userID uuid.UUID, bookingReq *entity.BookingRequest) (*entity.Booking, error)
 }
 
 type hotelService struct {
@@ -58,7 +60,7 @@ func (s *hotelService) GetHotelByID(ctx context.Context, id uint) (*entity.Hotel
 	return s.hotelRepo.FindByID(ctx, id)
 }
 
-func (s *hotelService) BookHotel(ctx context.Context, userID uint, bookingReq *entity.BookingRequest) (*entity.Booking, error) {
+func (s *hotelService) BookHotel(ctx context.Context, userID uuid.UUID, bookingReq *entity.BookingRequest) (*entity.Booking, error) {
 	// Validate hotel exists and has availability
 	hotel, err := s.hotelRepo.FindByID(ctx, *bookingReq.HotelID)
 	if err != nil {

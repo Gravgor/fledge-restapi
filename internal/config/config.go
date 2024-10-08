@@ -51,8 +51,8 @@ func LoadConfig() *Config {
 	}
 }
 
-// InitDB initializes the database connection
-func InitDB() *gorm.DB {
+// InitDB initializes the database connection and performs auto-migration
+func InitDB(models ...interface{}) *gorm.DB {
 	config := LoadConfig()
 
 	// Create database connection string
@@ -94,6 +94,16 @@ func InitDB() *gorm.DB {
 	sqlDB.SetMaxIdleConns(10)
 	sqlDB.SetMaxOpenConns(100)
 	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	// Perform auto-migration
+	if len(models) > 0 {
+		log.Println("Running database migrations...")
+		err := db.AutoMigrate(models...)
+		if err != nil {
+			log.Fatalf("Failed to auto-migrate database: %v", err)
+		}
+		log.Println("Database migrations completed successfully")
+	}
 
 	return db
 }

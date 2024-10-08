@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type FlightHandler struct {
@@ -29,7 +30,7 @@ func NewFlightHandler(flightService service.FlightService) *FlightHandler {
 // @Param search body entity.FlightSearchRequest true "Flight search criteria"
 // @Success 200 {array} entity.Flight
 // @Failure 400 {object} errors.ErrorResponse
-// @Router /api/flights/search [get]
+// @Router /api/flights/search [POST]
 func (h *FlightHandler) SearchFlights(c *gin.Context) {
 	var req entity.FlightSearchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -39,7 +40,7 @@ func (h *FlightHandler) SearchFlights(c *gin.Context) {
 
 	flights, err := h.flightService.SearchFlights(c.Request.Context(), &req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to search flights"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -72,6 +73,33 @@ func (h *FlightHandler) GetFlight(c *gin.Context) {
 	c.JSON(http.StatusOK, flight)
 }
 
+func (h *FlightHandler) ListAllFlights(c *gin.Context) {
+	flights, err := h.flightService.ListAllFlights(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to list flights"})
+		return
+	}
+
+	c.JSON(http.StatusOK, flights)
+}
+
+func (h *FlightHandler) ListFlightsByOrigin(c *gin.Context) {
+	origin := c.Query("origin")
+
+	if origin == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Origin is required"})
+		return
+	}
+
+	flights, err := h.flightService.ListFlightsByOrigin(c.Request.Context(), origin)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch flights"})
+		return
+	}
+
+	c.JSON(http.StatusOK, flights)
+}
+
 // BookFlight godoc
 // @Summary Book a flight
 // @Description Create a new flight booking
@@ -85,12 +113,16 @@ func (h *FlightHandler) GetFlight(c *gin.Context) {
 // @Security Bearer
 // @Router /api/flights/{id}/book [post]
 func (h *FlightHandler) BookFlight(c *gin.Context) {
-	userID, exists := c.Get("userID")
+	userIDStr, exists := c.Get("userID")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
 		return
 	}
-
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	var req entity.BookingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -107,7 +139,7 @@ func (h *FlightHandler) BookFlight(c *gin.Context) {
 	*req.FlightID = uint(flightID)
 	req.BookingType = "flight"
 
-	booking, err := h.flightService.BookFlight(c.Request.Context(), userID.(uint), &req)
+	booking, err := h.flightService.BookFlight(c.Request.Context(), userID, &req)
 	if err != nil {
 		switch err {
 		case errors.ErrInsufficientSeats:

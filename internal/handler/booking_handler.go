@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"fledge-restapi/internal/service"
 )
@@ -20,8 +21,16 @@ func NewBookingHandler(bookingService *service.BookingService) *BookingHandler {
 }
 
 func (h *BookingHandler) ListBookings(c *gin.Context) {
-	userID := c.GetUint("userID")
-
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	bookings, err := h.bookingService.ListBookings(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch bookings"})
@@ -32,7 +41,16 @@ func (h *BookingHandler) ListBookings(c *gin.Context) {
 }
 
 func (h *BookingHandler) GetBooking(c *gin.Context) {
-	userID := c.GetUint("userID")
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	bookingID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid booking ID"})
@@ -49,7 +67,16 @@ func (h *BookingHandler) GetBooking(c *gin.Context) {
 }
 
 func (h *BookingHandler) UpdateBooking(c *gin.Context) {
-	userID := c.GetUint("userID")
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	bookingID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid booking ID"})
@@ -72,7 +99,16 @@ func (h *BookingHandler) UpdateBooking(c *gin.Context) {
 }
 
 func (h *BookingHandler) CancelBooking(c *gin.Context) {
-	userID := c.GetUint("userID")
+	userIDStr, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User ID not found"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 	bookingID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid booking ID"})
